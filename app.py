@@ -48,7 +48,7 @@ def change_volume(direction):
 app = Flask(__name__)
 
 # Gemini setup
-genai.configure(api_key="AIzaSyDEdizK87WSg1rWyUQ-G1F9dY2cwLjEC6g")
+genai.configure(api_key="Use your own API")
 model = genai.GenerativeModel('gemini-1.5-flash-8b')
 
 # WeatherAPI Key
