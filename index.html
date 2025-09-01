@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>A.L.P.H.A - Smart Assistant</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6">
+    <h1 class="text-2xl font-bold text-center mb-6">A.L.P.H.A Smart Assistant</h1>
+
+    <!-- Last Query & Response Box -->
+    <div id="response-box" class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+      <div class="text-gray-500 text-sm">Last Query:</div>
+      <div id="last-query" class="font-semibold text-lg text-gray-800">No query yet.</div>
+      <div id="last-answer" class="text-gray-700 mt-2">Ask me something!</div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="flex gap-4 items-center">
+      <input
+        id="textInput"
+        type="text"
+        placeholder="Type your message"
+        class="flex-1 p-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button onclick="sendTextInput()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+        Send
+      </button>
+      <button onclick="startListening()" title="Voice input" class="p-2 border border-gray-300 rounded-lg hover:bg-gray-100">
+        🎤
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.start();
+
+      recognition.onresult = function (event) {
+        const userMessage = event.results[0][0].transcript.trim();
+        if (userMessage) sendMessage(userMessage);
+      };
+
+      recognition.onerror = function () {
+        speak("Sorry, I couldn't hear you clearly.");
+      };
+    }
+
+    function sendTextInput() {
+      const inputBox = document.getElementById('textInput');
+      if (!inputBox) return;
+
+      const userMessage = inputBox.value.trim();
+      if (userMessage) {
+        sendMessage(userMessage);
+        inputBox.value = '';
+        inputBox.focus();
+      }
+    }
+
+    function sendMessage(userMessage) {
+      // Update UI immediately
+      document.getElementById('last-query').textContent = userMessage;
+      document.getElementById('last-answer').textContent = "Thinking...";
+
+      fetch('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.reply) {
+          document.getElementById('last-answer').textContent = data.reply;
+          speak(data.reply);
+        } else {
+          document.getElementById('last-answer').textContent = "Sorry, I didn't get a valid reply.";
+          speak("Sorry, I didn't get a valid reply.");
+        }
+      })
+      .catch(() => {
+        document.getElementById('last-answer').textContent = "There was an error processing your request.";
+        speak("There was an error processing your request.");
+      });
+    }
+
+    function speak(text) {
+      console.log("Speaking:", text);
+      const synth = window.speechSynthesis;
+      if (!synth) return;
+
+      const utterThis = new SpeechSynthesisUtterance(text);
+      synth.speak(utterThis);
+    }
+
+    // Enable Enter key to send message
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('textInput').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          sendTextInput();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
