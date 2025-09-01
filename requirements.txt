@@ -1,0 +1,12 @@
+flask
+google.generativeaiasgenai
+pywhatkit
+os
+requests
+pytz
+datetimedatetime
+memory_logichandle_memory_input,recall
+webbrowser
+re
+platform
+subprocess
